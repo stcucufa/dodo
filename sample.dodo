@@ -1,0 +1,54 @@
+{ article title: "The Dodo 🦤 markup language" lang: en
+
+    # Comments start with a # and run to the end of the line. Special
+    # characters like #, {, }, and : can be escaped with \ so that they are
+    # treated like regular content.
+
+    { p Dodo 🦤 is a lightweight markup language that I created
+    because I can never remember how to make { link:
+    https://daringfireball.net/projects/markdown/syntax\#link links in
+    Markdown }, and HTML is too heavy to author by hand. It looks like
+    a stripped-down XML and is easy to parse, with the goal to also
+    make it easy to extend and transform into other output formats
+    (like HTML but also { eg } plain text or { latex }) using an
+    XSLT-like language (which should use the Dodo syntax, of course;
+    this is future work). This is mostly a fun experiment and should
+    remain so in the foreseeable future; it is { em not } claiming to
+    be of any use to anyone, anywhere, ever. }
+
+    { p A Dodo document looks like this: }
+
+    { figure
+        { pre
+
+\{ article title: "The Dodo 🦤 markup language"
+
+    \# Comments start with a \# and run to the end of the line. Special
+    \# characters like \#, \{, \} and \: can be escaped with \\ so that they
+    \# are treated like regular content.
+
+    \{ p Dodo 🦤 is a lightweight markup language that I created
+    because I can never remember how to make \{ link:
+    https://daringfireball.net/projects/markdown/syntax\#link links in
+    Markdown \}, and HTML is too heavy to author by hand. It looks like
+    a stripped-down XML and is easy to parse, with the goal to also
+    make it easy to extend and transform into other output formats
+    (like HTML but also \{ eg \} plain text or \{ latex \}) using an
+    XSLT-like language (which should use the Dodo syntax, of course;
+    this is future work). This is mostly a fun experiment and should
+    remain so in the foreseeable future; it is \{ em not \} claiming to
+    be of any use to anyone, anywhere, ever. \}
+
+    \{ p A Dodo document looks like this: \}
+
+    \# (...)
+
+\}
+
+        }
+        { figcaption A sample Dodo document }
+    }
+
+    # (...)
+
+}
