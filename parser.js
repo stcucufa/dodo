@@ -3,11 +3,6 @@ function nop() {
 
 const node = (document, tag) => ({ document, tag, attributes: {}, content: [] });
 
-const DefaultAttributes = {
-    article: "title",
-    link: "href",
-};
-
 const Token = {
     Space: Symbol.for("Space"),
     Open: Symbol.for("Open"),
@@ -43,7 +38,7 @@ function setAttribute(stack, value) {
         node.attributes[attr] = value;
     } else {
         node.tag = attr;
-        node.attributes[DefaultAttributes[attr] ?? attr] = value;
+        node.attributes[attr] = value;
     }
 }
 
@@ -149,17 +144,29 @@ const Parser = {
     parse() {
         this.input = this.document.text;
         this.state = State.Begin;
+        this.line = 1;
         const stack = [{ content: [] }];
         for (const [token, value] of this.tokens()) {
             const transitions = this.transitions.get(this.state);
             if (!transitions.has(token)) {
-                throw Error(`Parse error near\n${this.input}`);
+                throw Error(`Parse error, line ${this.line}: unexpected token ${
+                    Symbol.keyFor(token)
+                }; expected one of ${
+                    [...transitions.keys()].map(Symbol.keyFor).join(", ").replace(/, ([^,]+)$/, " or $1")
+                }.`);
             }
             const [q, f] = transitions.get(token);
             this.state = f.call(this, stack, value) ?? q;
         }
-        console.assert(stack.length === 1);
-        console.assert(stack[0].content.length === 1);
+        if (stack.length > 1) {
+            throw new Error(`Parse error, line ${this.line}: unterminated element "${stack[1].tag}".`);
+        }
+        if (stack[0].content.length === 0) {
+            throw new Error(`Parse error, line ${this.line}: no content.`);
+        }
+        if (stack[0].content.length > 1) {
+            throw new Error(`Parse error, line ${this.line}: extra content in document.`);
+        }
         return stack[0].content[0];
     },
 
@@ -167,6 +174,7 @@ const Parser = {
         while (this.input.length > 0) {
             const match = this.input.match(/^\s+/);
             if (match) {
+                this.line += match[0].match(/\n/g)?.length ?? 0;
                 this.input = this.input.substring(match[0].length);
                 yield [Token.Space, match[0]];
                 continue;
@@ -174,6 +182,7 @@ const Parser = {
             switch (this.input[0]) {
                 case "#":
                     this.input = this.input.replace(/.*\n/, "");
+                    this.line += 1;
                     break;
                 case "{":
                     this.input = this.input.substring(1);
@@ -197,6 +206,7 @@ const Parser = {
                         const match = this.input.match(/^"((?:[^"\\]|\\.)*)"/);
                         if (match) {
                             this.input = this.input.substring(match[0].length);
+                            this.line += match[0].match(/\n/g)?.length ?? 0;
                             yield [Token.String, unescape(match[1])];
                             break;
                         }
@@ -205,18 +215,20 @@ const Parser = {
                         const match = this.input.match(/^((?:[^\s\{\}#\u0060:\\]|\\.)+):/);
                         if (match) {
                             this.input = this.input.substring(match[0].length);
+                            this.line += match[0].match(/\n/g)?.length ?? 0;
                             yield [Token.Attribute, unescape(match[1])];
                             break;
                         }
                     }
-                    if (this.transitions.get(this.state).has(Token.Value)) {
+                    if (transitions.has(Token.Value)) {
                         const match = this.input.match(/^((?:[^\s\{\}#\u0060\\]|\\.)+)/);
                         if (match) {
                             this.input = this.input.substring(match[0].length);
+                            this.line += match[0].match(/\n/g)?.length ?? 0;
                             yield [Token.Value, unescape(match[1])];
                             break;
                         } else {
-                            throw Error(`Parse error: expected value near\n${this.input}`);
+                            throw Error(`Parse error, line ${this.line}: ill-formed attribute value`);
                         }
                     } else {
                         const match = this.input.match(
@@ -224,10 +236,11 @@ const Parser = {
                         );
                         if (match) {
                             this.input = this.input.substring(match[0].length);
+                            this.line += match[0].match(/\n/g)?.length ?? 0;
                             yield [Token.Text, unescape(match[0])];
                             break;
                         } else {
-                            throw Error(`Parse error: expected text near\n${this.input}`);
+                            throw Error(`Parse error, line ${this.line}: ill-formed text`);
                         }
                     }
             }
