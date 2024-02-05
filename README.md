@@ -81,6 +81,6 @@ other than a brace is treated like a regular character within the content of the
 characters may be escaped by a backslash to be treated like a regular character. Comments may appear
 anywhere; they start with a pound sign and run to the end of the line.
 
-** Parsing Dodo documents. ** A JS parser is provided and runs on the command line with [Bun](bun.sh).
+**Parsing Dodo documents.** A JS parser is provided and runs on the command line with [Bun](bun.sh).
 There are no dependencies so just run `bun run index.js sample.dodo` to see it in action. A sample HTML
 page is also provided to show how to parse a Dodo document in the browser.
