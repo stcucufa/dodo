@@ -1,7 +1,7 @@
 function nop() {
 }
 
-const node = (document, tag) => ({ document, tag, attributes: {}, content: [] });
+const node = (document, name) => ({ document, name, attributes: {}, content: [] });
 
 const Token = {
     Space: Symbol.for("Space"),
@@ -18,7 +18,7 @@ const State = {
     Begin: Symbol.for("Begin"),
     Empty: Symbol.for("Empty"),
     Attribute: Symbol.for("Attribute"),
-    Tag: Symbol.for("Tag"),
+    Name: Symbol.for("Name"),
     Content: Symbol.for("Content"),
     ContentWithSpace: Symbol.for("Content/space"),
     Unquote: Symbol.for("Unquote"),
@@ -34,10 +34,10 @@ function setAttribute(stack, value) {
     const node = stack.at(-1);
     const attr = stack.attribute;
     delete stack.attribute;
-    if (node.tag) {
+    if (node.name) {
         node.attributes[attr] = value;
     } else {
-        node.tag = attr;
+        node.name = attr;
         node.attributes[attr] = value;
     }
 }
@@ -48,6 +48,9 @@ function newNode(stack) {
 
 function addChild(stack) {
     const child = stack.pop();
+    if (stack.length === 0) {
+        throw Error(`Parse error, line ${this.line}: root element is already closed.`);
+    }
     stack.at(-1).content.push(child);
 }
 
@@ -81,16 +84,16 @@ const Parser = {
             [Token.Space, [State.Empty, nop]],
             [Token.Open, [State.Empty, newNode]],
             [Token.Close, [State.Content, stack => { stack.pop(); }]],
-            [Token.Value, [State.Tag, (stack, tag) => { stack.at(-1).tag = tag }]],
+            [Token.Value, [State.Name, (stack, name) => { stack.at(-1).name = name }]],
             [Token.Attribute, [State.Attribute, attributeName]],
         ])],
         [State.Attribute, new Map([
             [Token.Space, [State.Attribute, nop]],
-            [Token.String, [State.Tag, setAttribute]],
-            [Token.Value, [State.Tag, setAttribute]],
+            [Token.String, [State.Name, setAttribute]],
+            [Token.Value, [State.Name, setAttribute]],
         ])],
-        [State.Tag, new Map([
-            [Token.Space, [State.Tag, nop]],
+        [State.Name, new Map([
+            [Token.Space, [State.Name, nop]],
             [Token.Open, [State.Empty, newNode]],
             [Token.Close, [State.Content, addChild]],
             [Token.Attribute, [State.Attribute, attributeName]],
@@ -159,7 +162,7 @@ const Parser = {
             this.state = f.call(this, stack, value) ?? q;
         }
         if (stack.length > 1) {
-            throw new Error(`Parse error, line ${this.line}: unterminated element "${stack[1].tag}".`);
+            throw new Error(`Parse error, line ${this.line}: unterminated element "${stack[1].name}".`);
         }
         if (stack[0].content.length === 0) {
             throw new Error(`Parse error, line ${this.line}: no content.`);
