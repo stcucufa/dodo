@@ -1,0 +1,4 @@
+{ transform
+    { match { element } { apply { content } } }
+    { match { text } { value-of } }
+}

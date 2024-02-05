@@ -1,11 +1,31 @@
+import { exit } from "node:process";
+
 import { parse } from "./parser.js";
+import { transform } from "./transform.js";
 
-const path = process.argv[2];
-const file = Bun.file(path);
-const text = await file.text();
+async function parseFile(path) {
+    if (!path) {
+        console.error(`Parse error: no input.`);
+        exit(1);
+    }
+    try {
+        const file = Bun.file(path);
+        const text = await file.text();
+        return Object.assign(parse(text), { path });
+    } catch (error) {
+        console.error(`Could not parse ${path}: ${error.message}`);
+        exit(1);
+    }
+}
 
-try {
-    console.log(parse(text));
-} catch (error) {
-    console.error(error.message);
+const doc = await parseFile(process.argv[2]);
+if (process.argv.length > 3) {
+    const input = await parseFile(process.argv[3]);
+    try {
+        console.log(transform(input, doc));
+    } catch (error) {
+        console.error(`Could not transform ${input.path} with ${doc.path}: ${error.message}`);
+    }
+} else {
+    console.log(doc);
 }
