@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>🦤 Dodo</title>
+        <script type="module">
+
+import { parse } from "./parser.js";
+
+fetch("sample.dodo").then(response => response.text()).then(text => {
+    try {
+        console.log(parse(text));
+    } catch (error) {
+        console.error(error.message);
+        console.log(text);
+    }
+});
+
+        </script>
+    </head>
+    <body>
+    </body>
+</html>
