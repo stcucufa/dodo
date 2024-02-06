@@ -83,6 +83,16 @@ anywhere outside of strings; they start with a pound sign and run to the end of 
 
 ## Transforming Dodo documents
 
-A JS parser and is provided and runs on the command line with [Bun](bun.sh). There are no dependencies so just run `bun dodo.js sample.dodo` to check whether a file is
-correctly formatted, or `bun dodo.js transform.dodo input.dodo` to run the transform in `transform.dodo` on
-`input.dodo`.
+Dodo has a syntax but no semantics. The point is for the markup to be extensible, and make it easy to
+_transform_ it into other output formats. For instance, a custom “article” format for page-length blog
+posts defines elements such as `article`, `p`, `link`, and so on; this is then transformed to HTML by
+mapping these custom elements with HTML . Transforming the root `article` element outputs a whole HTML
+tree with common header, footer, and so on; `p` maps directly to an HTML `p` element; `link` (with its
+default attribute) is translated to `a` with an `href` attribute; text produces text with the right HTML
+escapes (for ampersand and angle brackets).
+
+A JS parser and transformer for Dodo documents is provided and runs on the command line with
+[Bun](https://bun.sh). There are no dependencies, so just run `bun dodo.js transform.dodo input.dodo` to
+apply the transform to the input document, or specify only one argument to check whether that is a
+syntactically correct Dodo file (see transform examples in the [transform](transform) directory). There is
+also a simple [HTML test page](dodo.html).
