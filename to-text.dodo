@@ -1,4 +1,4 @@
 { transform
-    { match { element } { apply { content } } }
-    { match { text } { value-of } }
+    { match { element } { if { empty? } { name-of } { apply { content-of } } } }
+    { match { text } { normalize-space { value-of } } }
 }

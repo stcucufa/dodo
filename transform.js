@@ -1,29 +1,39 @@
-// Matching
-
-const isElementNamed = (name, item) => typeof item !== "string" && item.name === name;
+const isObject = item => typeof item === "object" && !Array.isArray(item) && item !== null;
+const isElement = item => isObject(item) && typeof item.name === "string";
+const isElementNamed = (name, item) => isObject(item) && item.name === name;
 
 const Patterns = {
-    element: item => typeof item !== "string",
+    element: isElement,
     text: item => typeof item === "string",
 };
 
 function matchPattern(pattern, item) {
-    if (typeof pattern === "string") {
-        return pattern === item;
+    if (isElement(pattern)) {
+        return Patterns[pattern.name]?.(item) ?? false;
     }
-    return Patterns[pattern.name]?.(item) ?? false;
+    return pattern === item;
 }
 
 const Environment = {
     apply(items) {
         const path = this.path.concat([this.current]);
-        for (const item of items) {
-            this.queue.push([item, path]);
-        }
+        Array.prototype.unshift.apply(this.queue, items.map(item => ([item, path])));
     },
 
-    content(element) {
+    "content-of": function(element) {
         return (element ?? this.current).content;
+    },
+
+    "empty?": function(element) {
+        return (element ?? this.current).content.length === 0;
+    },
+
+    "name-of": function(element) {
+        return (element ?? this.current).name;
+    },
+
+    "normalize-space": function(text) {
+        return text.replace(/\s+/g, " ");
     },
 
     "value-of": function(item) {
@@ -39,17 +49,17 @@ function lambda(args, body) {
     };
 }
 
-const space = x => !(typeof x === "string" && x.trim() === "");
+const unspace = x => typeof x !== "string" || /\S/.test(x);
 
 export function evaluate(expr, env) {
-    if (!expr || typeof expr === "number" || typeof expr === "string" || Array.isArray(expr)) {
+    if (!isElement(expr)) {
         return expr;
     }
 
     switch (expr.name) {
         case "λ": {
             // Anonymous function definition: { λ: x <body> } or { λ `{ x y z } <body> }
-            const content = expr.content.filter(space);
+            const content = expr.content.filter(unspace);
             const args = "λ" in expr.attributes ? [expr.attributes["λ"]] : expr.shift();
             return lambda(args, content[0]);
         }
@@ -61,7 +71,7 @@ export function evaluate(expr, env) {
                 return value;
             }
             // Function definition: { define { f x y z } <body> }
-            const [[f, ...args], body] = expr.content.filter(space);
+            const [[f, ...args], body] = expr.content.filter(unspace);
             const value = lambda(args, body);
             env[f] = value;
             return value;
@@ -69,16 +79,15 @@ export function evaluate(expr, env) {
         case "get":
             return env[expr.content[0]];
         case "if":
-            const [p, t, e] = expr.content.filter(space);
+            const [p, t, e] = expr.content.filter(unspace);
             return evaluate.call(this, evaluate.call(this, p, env) ? t : e, env);
         default:
             // Apply
-            const values = expr.content.filter(space).map(x => evaluate.call(this, x, env));
+            const values = expr.content.filter(unspace).map(x => evaluate.call(this, x, env));
             const f = expr.name ? env[expr.name] : values.shift();
             return f.apply(Object.assign(Object.create(this), env), values);
     }
 }
-
 
 function tag(item) {
     if (typeof item === "string") {
@@ -87,7 +96,7 @@ function tag(item) {
     return item.name;
 }
 
-export function transform(rules, input) {
+export function transform(rules, input, trace = false) {
     if (rules.root.name !== "transform") {
         throw Error(`Expected a transform document, got "${rules.root.name}" instead.`);
     }
@@ -109,11 +118,16 @@ export function transform(rules, input) {
             context.current = current;
             context.path = path;
             const [pattern, content] = match;
-            for (const item of content.filter(space)) {
+            if (trace) {
+                console.info(
+                    `=== Match! ${tag(current)} [${path.map(tag).join(" :: ")}] matches ${tag(pattern)}`
+                );
+            }
+            for (const item of content.filter(unspace)) {
                 context.output += (evaluate.call(context, item, Environment) ?? "");
             }
         }
     }
 
-    console.log(context.output);
+    return context.output;
 }

@@ -11,17 +11,17 @@ import { transform } from "./transform.js";
 const tr = parse(`
 
 { transform
-    { match { element } { apply { content } } }
-    { match { text } { value-of } }
+    { match { element } { if { empty? } { name-of } { apply { content-of } } } }
+    { match { text } { normalize-space { value-of } } }
 }
 
 `);
 
 const input = parse(`
-{ dodo Hello, world! }
+{ dodo Hello, { world }! }
 `);
 
-console.log(transform(tr, input));
+console.log(transform(tr, input, true));
 
         </script>
     </head>
