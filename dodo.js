@@ -22,10 +22,8 @@ const doc = await parseFile(process.argv[2]);
 if (process.argv.length > 3) {
     const input = await parseFile(process.argv[3]);
     try {
-        console.log(transform(input, doc));
+        console.log(transform(doc, input));
     } catch (error) {
         console.error(`Could not transform ${input.path} with ${doc.path}: ${error.message}`);
     }
-} else {
-    console.log(doc);
 }
