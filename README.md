@@ -73,10 +73,15 @@ pairs), and content, which can be text or more elements.
 Attributes are introduced by a colon, and may have an unquoted value (the first non-whitespace string of
 characters that follows, like in `lang: en`) or a quoted value, that may contain any string of characters
 (like in `title: "The Dodo 🦤 markup language"`). Elements may have a _default_ attribute, with the same
-name as the element itself, if the name of the element is followed by a colon (like `{ link: href://... }`).
+name as the element itself, if the name of the element is followed by a colon (like
+`{ link: https://... }`).
 
 The content of the element starts at the first non-whitespace character that is not a name or an attribute
 value, and ends at the last non-whitespace character before the closing brace of the element. Anything
 other than a brace is treated like a regular character within the content of the element, and special
 characters may be escaped by a backslash to be treated like a regular character. Comments may appear
-anywhere; they start with a pound sign and run to the end of the line.
+anywhere outside of strings; they start with a pound sign and run to the end of the line.
+
+**Parsing Dodo documents.** A JS parser is provided and runs on the command line with [Bun](bun.sh).
+There are no dependencies so just run `bun run index.js sample.dodo` to see it in action. A sample HTML
+page is also provided to show how to parse a Dodo document in the browser.
