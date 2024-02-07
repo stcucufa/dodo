@@ -1,7 +1,7 @@
 function nop() {
 }
 
-const node = (document, name) => ({ document, name, attributes: {}, content: [] });
+const element = (document, name) => ({ document, name, attributes: {}, content: [] });
 
 const Token = {
     Space: Symbol.for("Space"),
@@ -31,19 +31,19 @@ function attributeName(stack, value) {
 }
 
 function setAttribute(stack, value) {
-    const node = stack.at(-1);
+    const element = stack.at(-1);
     const attr = stack.attribute;
     delete stack.attribute;
-    if (node.name) {
-        node.attributes[attr] = value;
+    if (element.name) {
+        element.attributes[attr] = value;
     } else {
-        node.name = attr;
-        node.attributes[attr] = value;
+        element.name = attr;
+        element.attributes[attr] = value;
     }
 }
 
-function newNode(stack) {
-    stack.push(node(this.document));
+function newElement(stack) {
+    stack.push(element(this.document));
 };
 
 function addChild(stack) {
@@ -66,7 +66,7 @@ function parseNumber(value) {
 }
 
 function get(value) {
-    const n = node(this.document, "get");
+    const n = element(this.document, "get");
     n.content.push(value);
     return n;
 }
@@ -78,11 +78,11 @@ const Parser = {
     transitions: new Map([
         [State.Begin, new Map([
             [Token.Space, [State.Begin, nop]],
-            [Token.Open, [State.Empty, newNode]]
+            [Token.Open, [State.Empty, newElement]]
         ])],
         [State.Empty, new Map([
             [Token.Space, [State.Empty, nop]],
-            [Token.Open, [State.Empty, newNode]],
+            [Token.Open, [State.Empty, newElement]],
             [Token.Close, [State.Content, stack => { stack.pop(); }]],
             [Token.Value, [State.Name, (stack, name) => { stack.at(-1).name = name }]],
             [Token.Attribute, [State.Attribute, attributeName]],
@@ -94,7 +94,7 @@ const Parser = {
         ])],
         [State.Name, new Map([
             [Token.Space, [State.Name, nop]],
-            [Token.Open, [State.Empty, newNode]],
+            [Token.Open, [State.Empty, newElement]],
             [Token.Close, [State.Content, addChild]],
             [Token.Attribute, [State.Attribute, attributeName]],
             [Token.Tick, [State.Unquote, nop]],
@@ -102,7 +102,7 @@ const Parser = {
         ])],
         [State.Content, new Map([
             [Token.Space, [State.ContentWithSpace, nop]],
-            [Token.Open, [State.Empty, newNode]],
+            [Token.Open, [State.Empty, newElement]],
             [Token.Close, [State.Content, addChild]],
             [Token.Tick, [State.Unquote, nop]],
             [Token.Text, [State.Content, addText]],
@@ -111,7 +111,7 @@ const Parser = {
             [Token.Space, [State.ContentWithSpace, nop]],
             [Token.Open, [State.Empty, function(stack) {
                 stack.at(-1).content.push(" ");
-                newNode.call(this, stack);
+                newElement.call(this, stack);
             }]],
             [Token.Close, [State.Content, addChild]],
             [Token.Tick, [State.Unquote, nop]],

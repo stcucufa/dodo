@@ -1,10 +1,11 @@
+# The Dodo 🦤 markup language
+
 Dodo 🦤 is a lightweight markup language that I created because I can never remember how to make [links in
 Markdown](https://daringfireball.net/projects/markdown/syntax#link), and HTML is too heavy to author by
 hand. It looks like a stripped-down XML and is easy to parse, with the goal to also make it easy to
-extend and transform into other output formats (like HTML but also _e.g._, plain text or LaTeX) using an
-XSLT-like language (which should use the Dodo syntax, of course; this is future work). This is only a fun
-experiment and should remain so in the foreseeable future; it is _not_ claiming to be of any use to anyone,
-anywhere, ever.
+extend and transform into other output formats (such as HTML but also _e.g._, plain text or LaTeX) with
+an XSLT-like language (using the Dodo syntax, of course). **This is only a fun experiment with no claim of
+being of any use to anyone, anywhere, ever.**
 
 A Dodo document looks like this:
 
@@ -21,11 +22,10 @@ A Dodo document looks like this:
     Markdown }, and HTML is too heavy to author by hand. It looks like
     a stripped-down XML and is easy to parse, with the goal to also
     make it easy to extend and transform into other output formats
-    (like HTML but also { eg } plain text or { latex }) using an
-    XSLT-like language (which should use the Dodo syntax, of course;
-    this is future work). This is mostly a fun experiment and should
-    remain so in the foreseeable future; it is { em not } claiming to
-    be of any use to anyone, anywhere, ever. }
+    (such as HTML but also { eg }, plain text or { latex }) with an
+    XSLT-like language (using the Dodo syntax, of course). { strong
+    This is only a fun experiment with no claim of being of any use to
+    anyone, anywhere, ever.} }
 
     { p A Dodo document looks like this: }
 
@@ -40,15 +40,14 @@ A Dodo document looks like this:
 
     \{ p Dodo 🦤 is a lightweight markup language that I created
     because I can never remember how to make \{ link:
-    https://daringfireball.net/projects/markdown/syntax\#link links in
+    https://daringfireball.net/projects/markdown/syntax\\\#link links in
     Markdown \}, and HTML is too heavy to author by hand. It looks like
     a stripped-down XML and is easy to parse, with the goal to also
     make it easy to extend and transform into other output formats
-    (like HTML but also \{ eg \} plain text or \{ latex \}) using an
-    XSLT-like language (which should use the Dodo syntax, of course;
-    this is future work). This is mostly a fun experiment and should
-    remain so in the foreseeable future; it is \{ em not \} claiming to
-    be of any use to anyone, anywhere, ever. \}
+    (such as HTML but also \{ eg \}  plain text or \{ latex \}) with an
+    XSLT-like language (using the Dodo syntax, of course). \{ strong
+    This is only a fun experiment with no claim of being of any use to
+    anyone, anywhere, ever. \} \}
 
     \{ p A Dodo document looks like this: \}
 
@@ -82,6 +81,18 @@ other than a brace is treated like a regular character within the content of the
 characters may be escaped by a backslash to be treated like a regular character. Comments may appear
 anywhere outside of strings; they start with a pound sign and run to the end of the line.
 
-**Parsing Dodo documents.** A JS parser is provided and runs on the command line with [Bun](bun.sh).
-There are no dependencies so just run `bun run index.js sample.dodo` to see it in action. A sample HTML
-page is also provided to show how to parse a Dodo document in the browser.
+## Transforming Dodo documents
+
+Dodo has a syntax but no semantics. The point is for the markup to be extensible, and make it easy to
+_transform_ it into other output formats. For instance, a custom “article” format for page-length blog
+posts defines elements such as `article`, `p`, `link`, and so on; this is then transformed to HTML by
+mapping these custom elements with HTML . Transforming the root `article` element outputs a whole HTML
+tree with common header, footer, and so on; `p` maps directly to an HTML `p` element; `link` (with its
+default attribute) is translated to `a` with an `href` attribute; text produces text with the right HTML
+escapes (for ampersand and angle brackets).
+
+A JS parser and transformer for Dodo documents is provided and runs on the command line with
+[Bun](https://bun.sh). There are no dependencies, so just run `bun dodo.js transform.dodo input.dodo` to
+apply the transform to the input document, or specify only one argument to check whether that is a
+syntactically correct Dodo file (see transform examples in the [transform](transform) directory). There is
+also a simple [HTML test page](dodo.html).

@@ -6,15 +6,24 @@
         <script type="module">
 
 import { parse } from "./parser.js";
+import { transform } from "./transform.js";
 
-fetch("sample.dodo").then(response => response.text()).then(text => {
-    try {
-        console.log(parse(text));
-    } catch (error) {
-        console.error(error.message);
-        console.log(text);
-    }
-});
+const tr = parse(`
+
+{ transform
+    { match { element } { if { empty? } { name-of } { apply { content-of } } } }
+    { match { text } { normalize-space { value-of } } }
+}
+
+`);
+
+const input = parse(`
+
+{ dodo Hello, { world }! }
+
+`);
+
+console.log(transform(tr, input, true));
 
         </script>
     </head>
