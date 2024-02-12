@@ -1,11 +1,26 @@
 import { describe, expect, test } from "bun:test";
 import { parse } from "../parser.js";
 
-test("Document", () => {
-    const text = `{ hello: world! }`;
-    const document = parse(text);
-    expect(document.text).toBe(text);
-    expect(document.root.document).toBe(document);
+describe("Document", () => {
+    test("Root, text, document", () => {
+        const text = `
+# A test document
+{ hello: world! }
+`;
+        const document = parse(text);
+        expect(document.text).toBe(text);
+        expect(document.root.document).toBe(document);
+    });
+
+    test("Empty document (error)", () => {
+        expect(() => { parse(""); }).toThrow();
+    });
+
+    test("No content (error)", () => {
+        expect(() => { parse(`# No content, just a comment.
+And some text.
+Which does not count.`); }).toThrow();
+    });
 });
 
 describe("Element", () => {
@@ -20,12 +35,17 @@ describe("Element", () => {
         expect(root.content[0].name).toBe("λ");
         expect(root.content[1]).toBe(2);
     });
+
+    test("Unescaping", () => {
+        const { root } = parse(`{ \\{\\ \\wow\\:\\ \\} }`);
+        expect(root.name).toBe("{ wow: }");
+    });
 });
 
 describe("Attributes", () => {
     test("Token and string attributes", () => {
-        const { root } = parse(`{ p foo: bar baz: "fum, quux, &c." x: y:z a\\:bc: d That’s it! }`);
-        expect(root.attributes).toEqual({ foo: "bar", baz: "fum, quux, &c.", x: "y:z", "a:bc": "d" });
+        const { root } = parse(`{ p foo: bar baz: "fum, \\"quux\\", &c." x: y:z a\\:bc: d That’s it! }`);
+        expect(root.attributes).toEqual({ foo: "bar", baz: `fum, "quux", &c.`, x: "y:z", "a:bc": "d" });
         expect(root.content).toEqual(["That’s it!"]);
     });
 
@@ -59,11 +79,16 @@ describe("Attributes", () => {
 });
 
 describe("Content", () => {
+    test("Unescaping", () => {
+        const { root } = parse("{ p Hello, \\{ \\`world\\# \\}\\ }");
+        expect(root.content).toEqual(["Hello, { `world# } "]);
+    });
+
     test("Whitespace handling", () => {
         const { root } = parse(`{ p This is a
             { em paragraph. }
         }`);
-        expect(root.content.length).toBe(3);
+        expect(root.content).toHaveLength(3);
         expect(root.content[0]).toEqual("This is a");
         expect(root.content[1]).toEqual(" ");
         expect(root.content[2].content).toEqual(["paragraph."]);
@@ -75,10 +100,16 @@ describe("Content", () => {
     });
 
     test("Unquoting (list)", () => {
-        // TODO
+        const { root } = parse("{ f `{ x 2 } }");
+        expect(root.content).toEqual([["x", 2]]);
     });
 
-    test("Unquoting (identifier)", () => {
-        // TODO
+    // FIXME 2K05 Lisp/custom parens
+    test.todo("Unquoting (identifier)", () => {
+        const { root } = parse("{ f `x }");
+        expect(root.content).toHaveLength(1);
+        const x = root.content[0];
+        expect(x.name).toBe("unquote");
+        expect(x.content).toEqual(["x"]);
     });
 });
