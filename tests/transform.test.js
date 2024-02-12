@@ -7,8 +7,8 @@ test("To text", () => {
         { match { element } { if { empty? } { name-of } { apply { content-of } } } }
         { match { text } { normalize-space { value-of } } }
     }`);
-    const input = parse(`{ p { eg } Hello, { em world }! }`);
-    expect(transform(rules, input)).toBe("eg Hello, world!");
+    const input = parse(`{ p { em Hello }, { world }! }`);
+    expect(transform(rules, input)).toBe("Hello, world!");
 });
 
 test("Evaluate", () => {
