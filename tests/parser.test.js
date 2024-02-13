@@ -67,11 +67,13 @@ describe("Attributes", () => {
         expect(root.content).toEqual(["This: is not an attribute. That: not an attribute either."]);
     });
 
+    // FIXME 2L0M More attributes
     test.todo("Number", () => {
         const { root } = parse("{ constant e: `2.718281828459045 }");
         expect(root.attributes).toEqual({ e: 2.718281828459045 });
     });
 
+    // FIXME 2L0M More attributes
     test.todo("List", () => {
         const { root } = parse("{ constants `{ 1 2 3 }");
         expect(root.attributes).toEqual({ constants: [1, 2, 3] });

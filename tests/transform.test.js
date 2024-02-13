@@ -12,6 +12,6 @@ test("To text", () => {
 });
 
 test("Evaluate", () => {
-    // TODO 2K05 Lisp/custom parens
+    // FIXME 2K05 Lisp/custom parens
     expect(evaluate.call({}, parse("{ I `23 }").root, { I: x => x })).toBe(23);
 });
