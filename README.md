@@ -95,4 +95,4 @@ A JS parser and transformer for Dodo documents is provided and runs on the comma
 [Bun](https://bun.sh). There are no dependencies, so just run `bun dodo.js transform.dodo input.dodo` to
 apply the transform to the input document, or specify only one argument to check whether that is a
 syntactically correct Dodo file (see transform examples in the [transform](transform) directory). There is
-also a simple [HTML test page](dodo.html).
+a test suite which runs with `bun test`, and also a simple [HTML test page](tests/dodo.html).

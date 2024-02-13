@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>🦤 Dodo</title>
+        <script type="module">
+
+import { parse } from "../parser.js";
+import { transform, evaluate } from "../transform.js";
+
+// Parse and trasnform
+
+const tr = parse(`
+
+{ transform
+    { match { element } { if { empty? } { name-of } { apply { content-of } } } }
+    { match { text } { normalize-space { value-of } } }
+}
+
+`);
+
+const input = parse(`
+
+{ dodo Hello, { world }! }
+
+`);
+
+console.log(transform(tr, input, true));
+
+// Evaluate
+
+const Environment = {
+    I: x => x,
+    "+": (...args) => args.reduce((x, y) => x + y, 0),
+};
+
+for (const expr of [
+    "{ I `23 }",
+    "{ define: π `3.141592653589793 (half of τ) }",
+    "{ define `{ double x } { + `x `x } }",
+    // FIXME 2K05 Lisp/custom parens
+    // "{ double `π }",
+    // "{ define `{ fib x } { if { < `x `2 } `x { + { fib { - `x `1  } } { fib { - `x `2 } } } } }",
+    // "{ = { fib `19 } `4181 }",
+    // "{ define: square { λ: x { * `x `x } } }",
+    // "{ square `π }",
+    // "{ { λ: x { + `x `1 } } `2 }"
+]) {
+    console.log(evaluate.call({}, parse(expr).root, Environment));
+}
+
+        </script>
+    </head>
+    <body>
+    </body>
+</html>
