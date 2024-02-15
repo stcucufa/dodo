@@ -1,0 +1,69 @@
+{ transform
+
+    { match { element article }
+
+<!DOCTYPE html>
+<html lang="{ attribute lang }">
+    <head>
+        <meta charset="utf-8" />
+        <title>{ escape-html { attribute article } }</title>
+        <link rel="icon" href="../images/favicon.png">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <h1>{ escape-html { attribute article } }</h1>
+        <p>
+            <time>{ date
+                { attribute lang }
+                { or
+                    { timestamp { attribute date } }
+                    { property-of { document } `{ timestamp } }
+                }
+            }</time>
+        </p>
+        { apply { content-of } }
+    </body>
+</html>
+
+    }
+
+    # Links and cross-references
+
+    { match { element link }
+        <a href="{ attribute link }">{
+            or { apply { content-of } } { attribute link }
+        }</a>
+    }
+
+    { match { element xref } <a href="{ resolve-xref }">{ apply { content-of } }</a> }
+
+    # Custom elements and attributes
+
+    { match { element ps } <p class="post-scriptum">{ apply { content-of } }</p> }
+    { match { element quote } <span class="quote">{ apply { content-of } }</span> }
+
+    # Custom abbreviations
+
+    { match { element eg } <em>e.g.,</em> }
+    { match { element ie } <em>i.e.,</em> }
+    { match { element latex } L<sup>A</sup>T<sub>E</sub>X }
+    { match { element lorem-ipsum }
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
+        labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit
+        esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt
+        in culpa qui officia deserunt mollit anim id est laborum.
+    }
+
+    # Do not show abstract
+
+    { match { element abstract } }
+
+    # Generic rules, use the same element and attributes as HTML.
+
+    { match { element }
+        <{ name-of }{ apply { attributes-of } }>{ apply { content-of } }</{ name-of }>
+    }
+    { match { attribute } { space }{ name-of }="{ value-of }" }
+    { match { text } { escape-html { value-of } } }
+}

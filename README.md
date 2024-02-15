@@ -10,7 +10,7 @@ being of any use to anyone, anywhere, ever.**
 A Dodo document looks like this:
 
 ```
-{ article title: "The Dodo 🦤 markup language" lang: en
+{ article: "The Dodo 🦤 markup language" lang: en
 
     # Comments start with a # and run to the end of the line. Special
     # characters like #, {, }, and : can be escaped with \ so that they are
@@ -32,7 +32,7 @@ A Dodo document looks like this:
     { figure
         { pre
 
-\{ article title: "The Dodo 🦤 markup language"
+\{ article: "The Dodo 🦤 markup language" lang: en
 
     \# Comments start with a \# and run to the end of the line. Special
     \# characters like \#, \{, \} and \: can be escaped with \\ so that they
@@ -92,7 +92,7 @@ default attribute) is translated to `a` with an `href` attribute; text produces 
 escapes (for ampersand and angle brackets).
 
 A JS parser and transformer for Dodo documents is provided and runs on the command line with
-[Bun](https://bun.sh). There are no dependencies, so just run `bun dodo.js transform.dodo input.dodo` to
-apply the transform to the input document, or specify only one argument to check whether that is a
+[Bun](https://bun.sh). There are no dependencies, so just run `bun run dodo.js transform.dodo input.dodo`
+to apply the transform to the input document, or specify only one argument to check whether that is a
 syntactically correct Dodo file (see transform examples in the [transform](transform) directory). There is
 a test suite which runs with `bun test`, and also a simple [HTML test page](tests/dodo.html).
