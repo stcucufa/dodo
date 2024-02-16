@@ -11,18 +11,17 @@ import { transform, evaluate } from "../transform.js";
 // Parse and trasnform
 
 const tr = parse(`
-
 { transform
-    { match { element } { if { empty? } { name-of } { apply { content-of } } } }
-    { match { text } { normalize-space { value-of } } }
+    { match { element }
+        <{ name-of }{ apply { attributes-of } }>{ apply { content-of } }</{ name-of }>
+    }
+    { match { attribute } { space }{ name-of }="{ escape-string { value-of } }" }
+    { match { text } { escape-html { value-of } } }
 }
-
 `);
 
 const input = parse(`
-
-{ dodo Hello, { world }! }
-
+{ p class: intro This is a paragraph. }
 `);
 
 console.log(transform(tr, input, true));
@@ -38,7 +37,7 @@ for (const expr of [
     "{ I `23 }",
     "{ define: π `3.141592653589793 (half of τ) }",
     "{ define `{ double x } { + `x `x } }",
-    // FIXME 2K05 Lisp/custom parens
+    // FIXME 2K05 Better Lisp evaluator
     // "{ double `π }",
     // "{ define `{ fib x } { if { < `x `2 } `x { + { fib { - `x `1  } } { fib { - `x `2 } } } } }",
     // "{ = { fib `19 } `4181 }",

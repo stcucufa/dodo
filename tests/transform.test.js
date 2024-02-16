@@ -11,7 +11,31 @@ test("To text", () => {
     expect(transform(rules, input)).toBe("Hello, world!");
 });
 
+test("Whitespace and newlines", () => {
+    const rules = parse(`
+{ transform
+
+    { match { element article }
+        \\# { attribute title }\\
+\\
+{ apply { content-of } }
+    }
+
+    { match { element p } { apply { content-of } } }
+    { match { text } { value-of } }
+}
+`);
+    const input = parse(`
+{ article title: "This is a test"
+    { p This is a paragraph. }
+}
+`);
+    expect(transform(rules, input)).toBe(
+`# This is a test
+
+This is a paragraph.`);
+});
+
 test("Evaluate", () => {
-    // FIXME 2K05 Lisp/custom parens
     expect(evaluate.call({}, parse("{ I `23 }").root, { I: x => x })).toBe(23);
 });

@@ -1,4 +1,4 @@
-{ article title: "The Dodo 🦤 markup language" lang: en
+{ article: "The Dodo 🦤 markup language" lang: en
 
     # Comments start with a # and run to the end of the line. Special
     # characters like #, {, }, and : can be escaped with \ so that they are
@@ -10,7 +10,7 @@
     Markdown }, and HTML is too heavy to author by hand. It looks like
     a stripped-down XML and is easy to parse, with the goal to also
     make it easy to extend and transform into other output formats
-    (such as HTML but also { eg }, plain text or { latex }) with an
+    (such as HTML but also { eg } plain text or { latex }) with an
     XSLT-like language (using the Dodo syntax, of course). { strong
     This is only a fun experiment with no claim of being of any use to
     anyone, anywhere, ever.} }
@@ -20,7 +20,7 @@
     { figure
         { pre
 
-\{ article title: "The Dodo 🦤 markup language"
+\{ article: "The Dodo 🦤 markup language" lang: en
 
     \# Comments start with a \# and run to the end of the line. Special
     \# characters like \#, \{, \} and \: can be escaped with \\ so that they

@@ -11,7 +11,7 @@ async function parseFile(path) {
     try {
         const file = Bun.file(path);
         const text = await file.text();
-        return Object.assign(parse(text), { path });
+        return Object.assign(parse(text), { path, timestamp: file.lastModified });
     } catch (error) {
         console.error(`Could not parse ${path}: ${error.message}`);
         exit(1);

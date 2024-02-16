@@ -96,6 +96,11 @@ describe("Content", () => {
         expect(root.content[2].content).toEqual(["paragraph."]);
     });
 
+    test("Escaping spaces and newlines", () => {
+        const { root } = parse(`{ p With trailing space\\ }`);
+        expect(root.content).toEqual(["With trailing space "]);
+    });
+
     test("Unquoting (number)", () => {
         const { root } = parse("{ define: π `3.141592653589793 (half of τ) }");
         expect(root.content).toEqual([3.141592653589793, " (half of τ)"]);
@@ -106,7 +111,7 @@ describe("Content", () => {
         expect(root.content).toEqual([["x", 2]]);
     });
 
-    // FIXME 2K05 Lisp/custom parens
+    // FIXME 2K05 Better Lisp evaluator
     test.todo("Unquoting (identifier)", () => {
         const { root } = parse("{ f `x }");
         expect(root.content).toHaveLength(1);

@@ -1,45 +1,100 @@
+import { date, timestamp } from "./date.js";
+import { existsSync } from 'node:fs';
+
+const Environment = {
+};
+
 const isObject = item => typeof item === "object" && !Array.isArray(item) && item !== null;
+const isAttribute = item => Array.isArray(item) && item.length > 0;
 const isElement = item => isObject(item) && typeof item.name === "string";
 const isElementNamed = (name, item) => isObject(item) && item.name === name;
+const isEmpty = item => isElement(item) ? item.content.length === 0 : item.length === 0;
 
 const Patterns = {
-    element: isElement,
+    attribute: (item, pattern) => isAttribute(item) && (
+        isEmpty(pattern) || item[0] === evaluate(pattern.content[0], Environment)
+    ),
+
+    element: (item, pattern) => isElement(item) && (
+        isEmpty(pattern) || item.name === evaluate(pattern.content[0], Environment)
+    ),
+
     text: item => typeof item === "string",
 };
 
 function matchPattern(pattern, item) {
     if (isElement(pattern)) {
-        return Patterns[pattern.name]?.(item) ?? false;
+        return Patterns[pattern.name]?.(item, pattern) ?? false;
     }
     return pattern === item;
 }
 
-const Environment = {
+const OutputEnvironment = Object.assign(Object.create(Environment), {
+    attribute(name, element) {
+        return (element ?? this.item).attributes[name];
+    },
+
     apply(items) {
-        const path = this.path.concat([this.current]);
-        Array.prototype.unshift.apply(this.queue, items.map(item => ([item, path])));
+        const path = this.path.concat([this.item]);
+        const context = Object.create(this);
+        return items.map(item => context.applyTransform(Object.assign(context, { item, path }))).join("");
+    },
+
+    "attributes-of": function (element) {
+        return [...Object.entries((element ?? this.item).attributes)];
     },
 
     "content-of": function(element) {
-        return (element ?? this.current).content;
+        return (element ?? this.item).content;
     },
 
-    "empty?": function(element) {
-        return (element ?? this.current).content.length === 0;
+    date,
+
+    document: function() {
+        return this.item.document;
     },
 
-    "name-of": function(element) {
-        return (element ?? this.current).name;
+    "empty?": function(item) {
+        return isEmpty(item ?? this.item);
     },
 
-    "normalize-space": function(text) {
-        return text.replace(/\s+/g, " ");
+    "escape-html": t => (t ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"),
+    "escape-string": t => (t ?? "").replace(/\u0022/g, "&#22;"),
+
+    "name-of": function(item) {
+        const it = item ?? this.item;
+        return isAttribute(it) ? it[0] : it.name;
     },
+
+    "normalize-space": text => text.replace(/\s+/g, " "),
+
+    // FIXME 2K05 Better Lisp evaluator
+    or(...xs) {
+        for (const x of xs) {
+            if (!!x) {
+                return x;
+            }
+        }
+    },
+
+    "property-of": (object, property) => object[property],
+
+    "resolve-xref": function(item) {
+        const element = item ?? this.item;
+        const xref = element.attributes.xref;
+        const path = element.document.path.replace(/\/\w+\.dodo$/, `/${xref}.dodo`);
+        return existsSync(path) ? `${xref}.html` : "#";
+    },
+
+    space: () => " ",
+
+    timestamp,
 
     "value-of": function(item) {
-        return item ?? this.current;
+        const it = item ?? this.item;
+        return isAttribute(it) ? it[1] : it;
     }
-};
+});
 
 function lambda(args, body) {
     return function(...values) {
@@ -85,6 +140,9 @@ export function evaluate(expr, env) {
             // Apply
             const values = expr.content.filter(unspace).map(x => evaluate.call(this, x, env));
             const f = expr.name ? env[expr.name] : values.shift();
+            if (!f) {
+                throw Error(`Nothing to apply (${expr.name})`);
+            }
             return f.apply(Object.assign(Object.create(this), env), values);
     }
 }
@@ -93,6 +151,9 @@ function tag(item) {
     if (typeof item === "string") {
         return `"${item.replace(/"/g, "\\\"")}"`;
     }
+    if (Array.isArray(item)) {
+        return `${item[0]}="${item[1].replace(/"/g, "\\\"")}"`;
+    }
     return item.name;
 }
 
@@ -100,34 +161,41 @@ export function transform(rules, input, trace = false) {
     if (rules.root.name !== "transform") {
         throw Error(`Expected a transform document, got "${rules.root.name}" instead.`);
     }
-    const matches = rules.root.content.filter(x => isElementNamed("match", x)).map(
-        element => {
+
+    const matches = rules.root.content.filter(x => isElementNamed("match", x)).map(element => {
         const [path, ...content] = element.content;
         return [path, content];
     });
 
-    const context = {
-        queue: [[input.root, []]],
-        output: "",
-    };
-
-    while (context.queue.length > 0) {
-        const [current, path] = context.queue.shift();
-        const match = matches.find(([pattern]) => matchPattern(pattern, current));
-        if (match) {
-            context.current = current;
-            context.path = path;
-            const [pattern, content] = match;
-            if (trace) {
-                console.info(
-                    `=== Match! ${tag(current)} [${path.map(tag).join(" :: ")}] matches ${tag(pattern)}`
-                );
-            }
-            for (const item of content.filter(unspace)) {
-                context.output += (evaluate.call(context, item, Environment) ?? "");
-            }
+    function applyTransform(context) {
+        const { item, path } = context;
+        const match = matches.find(([pattern]) => matchPattern(pattern, item));
+        if (!match) {
+            return "";
         }
+        const [pattern, content] = match;
+        if (trace) {
+            console.info(
+                `=== Match! ${tag(item)} [${path.map(tag).join(" :: ")}] matches ${tag(pattern)}`
+            );
+        }
+        return content.reduce((content, item, i, items) => {
+            if (typeof item === "string") {
+                if (i === 0) {
+                    item = item.replace(/^\s+/, "");
+                }
+                if (i == items.length - 1) {
+                    item = item.replace(/\s+$/, "");
+                }
+                if (typeof content.at(-1) === "string") {
+                    content.push(content.pop() + item);
+                    return content;
+                }
+            }
+            content.push(item);
+            return content;
+        }, []).map(item => evaluate.call(context, item, OutputEnvironment) ?? "").join("");
     }
 
-    return context.output;
+    return applyTransform({ item: input.root, path: [], applyTransform });
 }

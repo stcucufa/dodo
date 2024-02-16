@@ -71,7 +71,7 @@ function get(value) {
     return n;
 }
 
-const unescape = x => x.replace(/\\(.)/g, "$1");
+const unescape = x => x.replace(/\\(.)/gs, "$1");
 
 const Parser = {
 
@@ -215,7 +215,7 @@ const Parser = {
                         }
                     }
                     if (transitions.has(Token.Attribute)) {
-                        const match = this.input.match(/^((?:[^\s\{\}#\u0060:\\]|\\.)+):/);
+                        const match = this.input.match(/^((?:[^\s\{\}#\u0060:\\]|\\.)+):/s);
                         if (match) {
                             this.input = this.input.substring(match[0].length);
                             this.line += match[0].match(/\n/g)?.length ?? 0;
@@ -224,7 +224,7 @@ const Parser = {
                         }
                     }
                     if (transitions.has(Token.Value)) {
-                        const match = this.input.match(/^((?:[^\s\{\}#\u0060\\]|\\.)+)/);
+                        const match = this.input.match(/^((?:[^\s\{\}#\u0060\\]|\\.)+)/s);
                         if (match) {
                             this.input = this.input.substring(match[0].length);
                             this.line += match[0].match(/\n/g)?.length ?? 0;
@@ -235,7 +235,7 @@ const Parser = {
                         }
                     } else {
                         const match = this.input.match(
-                            /^([^\\\s\{\}#\u0060]|\\.)+(\s+([^\\\s\{\}\u0060]|\\.)+)*/
+                            /^([^\\\s\{\}#\u0060]|\\.)+(\s+([^\\\s\{\}\u0060]|\\.)+)*/s
                         );
                         if (match) {
                             this.input = this.input.substring(match[0].length);
