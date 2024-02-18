@@ -6,47 +6,14 @@
         <script type="module">
 
 import { parse } from "../parser.js";
-import { transform, evaluate } from "../transform.js";
 
-// Parse and trasnform
-
-const tr = parse(`
-{ transform
-    { match { element }
-        <{ name-of }{ apply { attributes-of } }>{ apply { content-of } }</{ name-of }>
-    }
-    { match { attribute } { space }{ name-of }="{ escape-string { value-of } }" }
-    { match { text } { escape-html { value-of } } }
+const document = parse(`
+{ eval
+    \`10
 }
 `);
 
-const input = parse(`
-{ p class: intro This is a paragraph. }
-`);
-
-console.log(transform(tr, input, true));
-
-// Evaluate
-
-const Environment = {
-    I: x => x,
-    "+": (...args) => args.reduce((x, y) => x + y, 0),
-};
-
-for (const expr of [
-    "{ I `23 }",
-    "{ define: π `3.141592653589793 (half of τ) }",
-    "{ define `{ double x } { + `x `x } }",
-    // FIXME 2K05 Better Lisp evaluator
-    // "{ double `π }",
-    // "{ define `{ fib x } { if { < `x `2 } `x { + { fib { - `x `1  } } { fib { - `x `2 } } } } }",
-    // "{ = { fib `19 } `4181 }",
-    // "{ define: square { λ: x { * `x `x } } }",
-    // "{ square `π }",
-    // "{ { λ: x { + `x `1 } } `2 }"
-]) {
-    console.log(evaluate.call({}, parse(expr).root, Environment));
-}
+console.log(document);
 
         </script>
     </head>

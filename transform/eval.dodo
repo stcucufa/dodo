@@ -1,0 +1,7 @@
+{ transform
+
+    # Get things rolling
+
+    { match { element eval } { apply { content-of } } }
+
+}
