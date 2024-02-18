@@ -96,6 +96,13 @@ describe("Content", () => {
         expect(root.content[2].content).toEqual(["paragraph."]);
     });
 
+    test("Comments within content", () => {
+        const { root } = parse(`{ p This is some content # not this
+and # not this either
+this is more content }`);
+        expect(root.content).toEqual(["This is some content", " and", " this is more content"]);
+    });
+
     test("Escaping spaces and newlines", () => {
         const { root } = parse(`{ p With trailing space\\ }`);
         expect(root.content).toEqual(["With trailing space "]);
