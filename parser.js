@@ -235,7 +235,7 @@ const Parser = {
                         }
                     } else {
                         const match = this.input.match(
-                            /^([^\\\s\{\}#\u0060]|\\.)+(\s+([^\\\s\{\}\u0060]|\\.)+)*/s
+                            /^([^\\\s\{\}#\u0060]|\\.)+(\s+([^\\\s\{\}#\u0060]|\\.)+)*/s
                         );
                         if (match) {
                             this.input = this.input.substring(match[0].length);
