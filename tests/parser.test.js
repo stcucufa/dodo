@@ -98,9 +98,9 @@ describe("Content", () => {
 
     test("Comments within content", () => {
         const { root } = parse(`{ p This is some content # not this
-and # not this either
+and \\# some more # but not this
 this is more content }`);
-        expect(root.content).toEqual(["This is some content", " and", " this is more content"]);
+        expect(root.content).toEqual(["This is some content", " and # some more", " this is more content"]);
     });
 
     test("Escaping spaces and newlines", () => {
