@@ -55,6 +55,12 @@ describe("Attributes", () => {
         expect(root.content).toEqual([]);
     });
 
+    test("Default attribute, spelled out", () => {
+        const { root } = parse("{ hello foo: bar hello: world! }");
+        expect(root.attributes).toEqual({ hello: "world!", foo: "bar" });
+        expect(root.content).toEqual([]);
+    });
+
     test("Not an attribute (escaped)", () => {
         const { root } = parse("{ p This\\: is not an attribute. That: not an attribute either. }");
         expect(root.attributes).toEqual({});
@@ -116,6 +122,16 @@ this is more content }`);
     test("Unquoting (list)", () => {
         const { root } = parse("{ f `{ x 2 } }");
         expect(root.content).toEqual([["x", 2]]);
+    });
+
+    // FIXME 2K05 Better Lisp evaluator
+    test("Mixed content", () => {
+        const { root } = parse("{ import { as: foo bar } `{ baz fum } }");
+        expect(root.content.length).toBe(2);
+        expect(root.content[0].name).toBe("as");
+        expect(root.content[0].attributes[root.content[0].name]).toBe("foo");
+        expect(root.content[0].content).toEqual(["bar"]);
+        expect(root.content[1]).toEqual(["baz", "fum"]);
     });
 
     // FIXME 2K05 Better Lisp evaluator

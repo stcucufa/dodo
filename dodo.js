@@ -1,4 +1,5 @@
 import { exit } from "node:process";
+import { resolve } from "node:path";
 
 import { parse } from "./parser.js";
 import { transform } from "./transform.js";
@@ -22,8 +23,9 @@ const doc = await parseFile(process.argv[2]);
 if (process.argv.length > 3) {
     const input = await parseFile(process.argv[3]);
     try {
-        console.log(transform(doc, input));
+        Bun.write(Bun.stdout, await transform(doc, input, path => resolve(process.cwd(), path)));
     } catch (error) {
         console.error(`Could not transform ${input.path} with ${doc.path}: ${error.message}`);
+        throw error;
     }
 }
