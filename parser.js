@@ -65,8 +65,8 @@ function parseNumber(value) {
     }
 }
 
-function get(value) {
-    const n = element(this.document, "get");
+function unquote(value) {
+    const n = element(this.document, "unquote");
     n.content.push(value);
     return n;
 }
@@ -122,7 +122,7 @@ const Parser = {
         [State.Unquote, new Map([
             [Token.Open, [State.List, stack => { stack.push([]); }]],
             [Token.Value, [State.Content, function(stack, value) {
-                stack.at(-1).content.push(parseNumber(value) ?? get.call(this, value));
+                stack.at(-1).content.push(parseNumber(value) ?? unquote.call(this, value));
             }]],
         ])],
         [State.List, new Map([

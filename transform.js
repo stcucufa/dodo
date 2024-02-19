@@ -20,6 +20,8 @@ const Patterns = {
     ),
 
     text: item => typeof item === "string",
+
+    number: item => typeof item === "number",
 };
 
 function matchPattern(pattern, item) {
@@ -67,15 +69,6 @@ const OutputEnvironment = Object.assign(Object.create(Environment), {
     },
 
     "normalize-space": text => text.replace(/\s+/g, " "),
-
-    // FIXME 2K05 Better Lisp evaluator
-    or(...xs) {
-        for (const x of xs) {
-            if (!!x) {
-                return x;
-            }
-        }
-    },
 
     "property-of": (object, property) => object[property],
 
@@ -131,11 +124,21 @@ export function evaluate(expr, env) {
             env[f] = value;
             return value;
         }
-        case "get":
+        case "unquote":
             return env[expr.content[0]];
         case "if":
             const [p, t, e] = expr.content.filter(unspace);
             return evaluate.call(this, evaluate.call(this, p, env) ? t : e, env);
+        case "or":
+            for (const x of expr.content) {
+                if (unspace(x)) {
+                    const v = evaluate.call(this, x, env);
+                    if (v) {
+                        return v;
+                    }
+                }
+            }
+            break;
         default:
             // Apply
             const values = expr.content.filter(unspace).map(x => evaluate.call(this, x, env));

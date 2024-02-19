@@ -4,4 +4,9 @@
 
     { match { element eval } { apply { content-of } } }
 
+    # Simple content
+
+    { match { text } { value-of } }
+    { match { number } { value-of } }
+
 }

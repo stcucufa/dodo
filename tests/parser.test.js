@@ -118,8 +118,7 @@ this is more content }`);
         expect(root.content).toEqual([["x", 2]]);
     });
 
-    // FIXME 2K05 Better Lisp evaluator
-    test.todo("Unquoting (identifier)", () => {
+    test("Unquoting (identifier)", () => {
         const { root } = parse("{ f `x }");
         expect(root.content).toHaveLength(1);
         const x = root.content[0];
