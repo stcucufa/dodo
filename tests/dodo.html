@@ -8,27 +8,25 @@
 import { parse } from "../parser.js";
 import { transform, evaluate } from "../transform.js";
 
-// Parse and trasnform
-
-const tr = parse(`
-{ transform
-    { match { element }
-        <{ name-of }{ apply { attributes-of } }>{ apply { content-of } }</{ name-of }>
+async function testTransform() {
+    const tr = parse(`
+    { transform
+        { match { element }
+            <{ name-of }{ apply { attributes-of } }>{ apply { content-of } }</{ name-of }>
+        }
+        { match { attribute } { space }{ name-of }="{ escape-string { value-of } }" }
+        { match { text } { escape-html { value-of } } }
     }
-    { match { attribute } { space }{ name-of }="{ escape-string { value-of } }" }
-    { match { text } { escape-html { value-of } } }
+    `);
+
+    const input = parse(`
+    { p class: intro This is a paragraph. }
+    `);
+
+    console.log(await transform(tr, input));
 }
-`);
 
-const input = parse(`
-{ p class: intro This is a paragraph. }
-`);
-
-transform(tr, input).then(result => {
-    console.log(result);
-
-    // Evaluate
-
+function testEvaluate() {
     const Environment = {
         I: x => x,
         "+": (...args) => args.reduce((x, y) => x + y, 0),
@@ -48,7 +46,12 @@ transform(tr, input).then(result => {
     ]) {
         console.log(evaluate.call({}, parse(expr).root, Environment));
     }
-});
+}
+
+(async function() {
+    await testTransform();
+    testEvaluate();
+})();
 
         </script>
     </head>

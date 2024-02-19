@@ -29,7 +29,7 @@ describe("Element", () => {
         expect(root.name).toBe("Hello, world!");
     });
 
-    test("Empty", () => {
+    test("Anonymous", () => {
         const { root } = parse("{ { λ: x { + `x `1 } } `2 }");
         expect(root.name).toBe(undefined);
         expect(root.content[0].name).toBe("λ");
@@ -124,14 +124,24 @@ this is more content }`);
         expect(root.content).toEqual([["x", 2]]);
     });
 
-    // FIXME 2K05 Better Lisp evaluator
-    test("Mixed content", () => {
+    test("Mixed content (unquote)", () => {
         const { root } = parse("{ import { as: foo bar } `{ baz fum } }");
         expect(root.content.length).toBe(2);
         expect(root.content[0].name).toBe("as");
         expect(root.content[0].attributes[root.content[0].name]).toBe("foo");
         expect(root.content[0].content).toEqual(["bar"]);
         expect(root.content[1]).toEqual(["baz", "fum"]);
+    });
+
+    test("Mixed content (empty element)", () => {
+        const { root } = parse("{ import { as: foo bar } baz {} fum }");
+        expect(root.content.length).toBe(4);
+        expect(root.content[0].name).toBe("as");
+        expect(root.content[0].attributes[root.content[0].name]).toBe("foo");
+        expect(root.content[0].content).toEqual(["bar"]);
+        expect(root.content[1]).toEqual(" baz");
+        expect(root.content[2]).toEqual(" ");
+        expect(root.content[3]).toEqual(" fum");
     });
 
     // FIXME 2K05 Better Lisp evaluator

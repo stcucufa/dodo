@@ -1,4 +1,5 @@
-import { expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
+
 import { parse } from "../parser.js";
 import { transform, evaluate } from "../transform.js";
 
@@ -34,6 +35,41 @@ test("Whitespace and newlines", async () => {
 `# This is a test
 
 This is a paragraph.`);
+});
+
+describe("Import JS", () => {
+    const input = parse("{ test }");
+
+    test("Import everything", async () => {
+        const rules = parse(`
+{ transform
+    { import-js: ./tests/import.js }
+    { match { element test } { myName } { foo } }
+}
+`);
+        expect(await transform(rules, input)).toBe("test bar");
+    });
+
+    test("Import selected", async () => {
+        const rules = parse(`
+{ transform
+    { import-js: ./tests/import.js myName }
+    { match { element test } { myName } }
+}
+`);
+        expect(await transform(rules, input)).toBe("test");
+    });
+
+    test("Import as", async () => {
+        const rules = parse(`
+{ transform
+    { import-js: ./tests/import.js { as: my-name myName } \`{ foo } }
+    { match { element test } { my-name } { foo } }
+}
+`);
+        expect(await transform(rules, input)).toBe("test bar");
+    });
+
 });
 
 test("Evaluate", () => {
