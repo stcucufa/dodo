@@ -1,6 +1,3 @@
-import { date, timestamp } from "./date.js";
-import { existsSync } from 'node:fs';
-
 const Environment = {
 };
 
@@ -9,6 +6,7 @@ const isAttribute = item => Array.isArray(item) && item.length > 0;
 const isElement = item => isObject(item) && typeof item.name === "string";
 const isElementNamed = (name, item) => isObject(item) && item.name === name;
 const isEmpty = item => isElement(item) ? item.content.length === 0 : item.length === 0;
+const textContent = item => item.content?.filter(it => !isElement(it)).join(" ") ?? "";
 
 const Patterns = {
     attribute: (item, pattern) => isAttribute(item) && (
@@ -48,8 +46,6 @@ const OutputEnvironment = Object.assign(Object.create(Environment), {
         return (element ?? this.item).content;
     },
 
-    date,
-
     document: function() {
         return this.item.document;
     },
@@ -66,6 +62,8 @@ const OutputEnvironment = Object.assign(Object.create(Environment), {
         return isAttribute(it) ? it[0] : it.name;
     },
 
+    newline: () => "\n",
+
     "normalize-space": text => text.replace(/\s+/g, " "),
 
     // FIXME 2K05 Better Lisp evaluator
@@ -79,16 +77,7 @@ const OutputEnvironment = Object.assign(Object.create(Environment), {
 
     "property-of": (object, property) => object[property],
 
-    "resolve-xref": function(item) {
-        const element = item ?? this.item;
-        const xref = element.attributes.xref;
-        const path = element.document.path.replace(/\/\w+\.dodo$/, `/${xref}.dodo`);
-        return existsSync(path) ? `${xref}.html` : "#";
-    },
-
     space: () => " ",
-
-    timestamp,
 
     "value-of": function(item) {
         const it = item ?? this.item;
@@ -157,9 +146,32 @@ function tag(item) {
     return item.name;
 }
 
-export function transform(rules, input, trace = false) {
+export async function transform(rules, input, resolvePath) {
     if (rules.root.name !== "transform") {
         throw Error(`Expected a transform document, got "${rules.root.name}" instead.`);
+    }
+
+    for (const imp of rules.root.content.filter(x => isElementNamed("import-js", x))) {
+        const path = imp.attributes[imp.name];
+        const module = await import(resolvePath?.(path) ?? path);
+        if (imp.content.length === 0) {
+            for (const [name, f] of Object.entries(module)) {
+                OutputEnvironment[name] = f;
+            }
+        } else {
+            for (const it of imp.content) {
+                const name = textContent(it);
+                if (isElementNamed("as", it)) {
+                    OutputEnvironment[it.attributes.as] = module[name];
+                } else if (Array.isArray(it)) {
+                    for (const name of it) {
+                        OutputEnvironment[name] = module[name];
+                    }
+                } else if (name) {
+                    OutputEnvironment[name] = module[name];
+                }
+            }
+        }
     }
 
     const matches = rules.root.content.filter(x => isElementNamed("match", x)).map(element => {
@@ -174,11 +186,6 @@ export function transform(rules, input, trace = false) {
             return "";
         }
         const [pattern, content] = match;
-        if (trace) {
-            console.info(
-                `=== Match! ${tag(item)} [${path.map(tag).join(" :: ")}] matches ${tag(pattern)}`
-            );
-        }
         return content.reduce((content, item, i, items) => {
             if (typeof item === "string") {
                 if (i === 0) {
