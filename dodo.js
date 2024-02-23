@@ -26,5 +26,6 @@ if (process.argv.length > 3) {
         Bun.write(Bun.stdout, await transform(doc, input, path => resolve(process.cwd(), path)));
     } catch (error) {
         console.error(`Could not transform ${input.path} with ${doc.path}: ${error.message}`);
+        throw error;
     }
 }
