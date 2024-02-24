@@ -11,9 +11,10 @@ import { transform, evaluate } from "../transform.js";
 async function testTransform() {
     const rules = parse(`{ transform
         { match { element foo } { apply { element { choice \`{ bar baz } } } } }
+        { match { element bar } { apply { content-of } } }
         { match { text } { value-of } }
     }`);
-    const input = parse(`{ foo Hello, { fum suckers! } { bar world! } }`);
+    const input = parse(`{ foo { fum So long, suckers! } { bar Hello, world! } }`);
 
     console.log(await transform(rules, input));
 }
