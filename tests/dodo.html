@@ -9,21 +9,13 @@ import { parse } from "../parser.js";
 import { transform, evaluate } from "../transform.js";
 
 async function testTransform() {
-    const tr = parse(`
-    { transform
-        { match { element }
-            <{ name-of }{ apply { attributes-of } }>{ apply { content-of } }</{ name-of }>
-        }
-        { match { attribute } { space }{ name-of }="{ escape-string { value-of } }" }
-        { match { text } { escape-html { value-of } } }
-    }
-    `);
+    const rules = parse(`{ transform
+        { match { element foo } { apply { element { choice \`{ bar baz } } } } }
+        { match { text } { value-of } }
+    }`);
+    const input = parse(`{ foo Hello, { fum suckers! } { bar world! } }`);
 
-    const input = parse(`
-    { p class: intro This is a paragraph. }
-    `);
-
-    console.log(await transform(tr, input));
+    console.log(await transform(rules, input));
 }
 
 function testEvaluate() {

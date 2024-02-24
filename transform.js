@@ -62,7 +62,9 @@ const OutputEnvironment = Object.assign(Object.create(Environment), {
 
     "element": function(name, item) {
         const parent = item ?? this.item;
-        const children = parent.content.filter(x => isElementNamed(name, x));
+        const children = parent.content.filter(
+            typeof name === "string" ? x => isElementNamed(name, x) : x => isElement(x) && name.has(x.name)
+        );
         if (children.length > 0) {
             return children;
         }
