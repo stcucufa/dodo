@@ -3,6 +3,39 @@ import { describe, expect, test } from "bun:test";
 import { parse } from "../parser.js";
 import { transform, evaluate } from "../transform.js";
 
+describe("Patterns", () => {
+    test("choice", async () => {
+        const rules = parse(`{ transform
+            { match { element { choice \`{ bar baz } } } { apply { content-of } } }
+            { match { text } { value-of } }
+        }`);
+        const input = parse(`{ bar Hello, { foo suckers! } { baz world! } }`);
+        expect(await transform(rules, input)).toMatch(/Hello,\s+world!/);
+    });
+});
+
+describe("Output", () => {
+    test("Select element", async () => {
+        const rules = parse(`{ transform
+            { match { element foo } { apply { element bar } } }
+            { match { element bar } { apply { content-of } } }
+            { match { text } { value-of } }
+        }`);
+        const input = parse(`{ foo { baz So long, suckers! } { bar Hello, world! } }`);
+        expect(await transform(rules, input)).toBe("Hello, world!");
+    });
+
+    test("choice", async () => {
+        const rules = parse(`{ transform
+            { match { element foo } { apply { element { choice \`{ bar baz } } } } }
+            { match { element bar } { apply { content-of } } }
+            { match { text } { value-of } }
+        }`);
+        const input = parse(`{ foo , { fum So long, suckers! } { bar Hello, world! } }`);
+        expect((await transform(rules, input)).replace(/\s+/g, " ")).toBe("Hello, world!");
+    });
+});
+
 test("To text", async () => {
     const rules = parse(`{ transform
         { match { element } { if { empty? } { name-of } { apply { content-of } } } }

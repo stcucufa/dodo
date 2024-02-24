@@ -1,4 +1,7 @@
 const Environment = {
+    choice(options) {
+        return new Set(options);
+    }
 };
 
 const isObject = item => typeof item === "object" && !Array.isArray(item) && item !== null;
@@ -10,12 +13,19 @@ const textContent = item => item.content?.filter(it => !isElement(it)).join(" ")
 
 const Patterns = {
     attribute: (item, pattern) => isAttribute(item) && (
-        isEmpty(pattern) || item[0] === evaluate(pattern.content[0], Environment)
+        isEmpty(pattern) || item[0] === evaluate.call({}, pattern.content[0], Environment)
     ),
 
-    element: (item, pattern) => isElement(item) && (
-        isEmpty(pattern) || item.name === evaluate(pattern.content[0], Environment)
-    ),
+    element(item, pattern) {
+        if (!isElement(item)) {
+            return false;
+        }
+        if (isEmpty(pattern)) {
+            return true;
+        }
+        const name = evaluate.call({}, pattern.content[0], Environment);
+        return typeof name === "string" ? item.name === name : name.has(item.name);
+    },
 
     text: item => typeof item === "string",
 };
@@ -48,6 +58,16 @@ const OutputEnvironment = Object.assign(Object.create(Environment), {
 
     document: function() {
         return this.item.document;
+    },
+
+    "element": function(name, item) {
+        const parent = item ?? this.item;
+        const children = parent.content.filter(
+            typeof name === "string" ? x => isElementNamed(name, x) : x => isElement(x) && name.has(x.name)
+        );
+        if (children.length > 0) {
+            return children;
+        }
     },
 
     "empty?": function(item) {
