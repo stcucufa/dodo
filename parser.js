@@ -12,15 +12,20 @@ const Token = {
     String: Symbol.for("String"),
     Tick: Symbol.for("Tick"),
     Text: Symbol.for("Text"),
+    OpenCDATA: Symbol.for("OpenCDATA"),
+    CDATASection: Symbol.for("CDATASection"),
 };
 
 const State = {
     Begin: Symbol.for("Begin"),
     Empty: Symbol.for("Empty"),
     Attribute: Symbol.for("Attribute"),
+    AttributeCDATA: Symbol.for("Attribute/CDATA"),
     Name: Symbol.for("Name"),
     Content: Symbol.for("Content"),
     ContentWithSpace: Symbol.for("Content/space"),
+    ContentCDATA: Symbol.for("Content/CDATA"),
+    ContentCDATAWithSpace: Symbol.for("Content/CDATA/space"),
     Unquote: Symbol.for("Unquote"),
     List: Symbol.for("List"),
     ClosedList: Symbol.for("List/closed"),
@@ -58,6 +63,10 @@ function addText(stack, value) {
     stack.at(-1).content.push(value);
 }
 
+function addTextWithSpace(stack, value) {
+    addText(stack, stack.at(-1).content.length === 0 ? value : ` ${value}`);
+}
+
 function parseNumber(value) {
     const match = value.match(/^[+-]?\d+(\.\d+)?$/);
     if (match) {
@@ -91,6 +100,10 @@ const Parser = {
             [Token.Space, [State.Attribute, nop]],
             [Token.String, [State.Name, setAttribute]],
             [Token.Value, [State.Name, setAttribute]],
+            [Token.OpenCDATA, [State.AttributeCDATA, nop]]
+        ])],
+        [State.AttributeCDATA, new Map([
+            [Token.CDATASection, [State.Name, setAttribute]]
         ])],
         [State.Name, new Map([
             [Token.Space, [State.Name, nop]],
@@ -99,6 +112,7 @@ const Parser = {
             [Token.Attribute, [State.Attribute, attributeName]],
             [Token.Tick, [State.Unquote, nop]],
             [Token.Text, [State.Content, addText]],
+            [Token.OpenCDATA, [State.ContentCDATA, nop]],
         ])],
         [State.Content, new Map([
             [Token.Space, [State.ContentWithSpace, nop]],
@@ -106,6 +120,7 @@ const Parser = {
             [Token.Close, [State.Content, addChild]],
             [Token.Tick, [State.Unquote, nop]],
             [Token.Text, [State.Content, addText]],
+            [Token.OpenCDATA, [State.ContentCDATA, nop]],
         ])],
         [State.ContentWithSpace, new Map([
             [Token.Space, [State.ContentWithSpace, nop]],
@@ -115,9 +130,14 @@ const Parser = {
             }]],
             [Token.Close, [State.Content, addChild]],
             [Token.Tick, [State.Unquote, nop]],
-            [Token.Text, [State.Content, (stack, value) => {
-                addText(stack, stack.at(-1).content.length === 0 ? value : ` ${value}`);
-            }]],
+            [Token.Text, [State.Content, addTextWithSpace]],
+            [Token.OpenCDATA, [State.ContentCDATAWithSpace, nop]],
+        ])],
+        [State.ContentCDATA, new Map([
+            [Token.CDATASection, [State.Content, addText]]
+        ])],
+        [State.ContentCDATAWithSpace, new Map([
+            [Token.CDATASection, [State.ContentWithSpace, addTextWithSpace]]
         ])],
         [State.Unquote, new Map([
             [Token.Open, [State.List, stack => { stack.push([]); }]],
@@ -175,6 +195,18 @@ const Parser = {
 
     *tokens() {
         while (this.input.length > 0) {
+            const transitions = this.transitions.get(this.state);
+
+            if (transitions.has(Token.CDATASection)) {
+                const match = this.input.match(/^((?:[^:]|:[^}])*):}/);
+                if (!match) {
+                    throw Error(`Unterminated CDATA section starting at ${this.line}: "${this.input}"`);
+                }
+                this.line += match[0].match(/\n/g)?.length ?? 0;
+                this.input = this.input.substring(match[0].length);
+                yield [Token.CDATASection, match[1]];
+            }
+
             const match = this.input.match(/^\s+/);
             if (match) {
                 this.line += match[0].match(/\n/g)?.length ?? 0;
@@ -188,15 +220,19 @@ const Parser = {
                     this.line += 1;
                     break;
                 case "{":
-                    this.input = this.input.substring(1);
-                    yield [Token.Open];
+                    if (this.input[1] === ":") {
+                        this.input = this.input.substring(2);
+                        yield [Token.OpenCDATA];
+                    } else {
+                        this.input = this.input.substring(1);
+                        yield [Token.Open];
+                    }
                     break;
                 case "}":
                     this.input = this.input.substring(1);
                     yield [Token.Close];
                     break;
                 default:
-                    const transitions = this.transitions.get(this.state);
                     if (transitions.has(Token.Tick)) {
                         const match = this.input.match(/^\u0060\S/);  // backtick
                         if (match) {

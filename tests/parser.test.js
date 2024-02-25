@@ -152,4 +152,19 @@ this is more content }`);
         expect(x.name).toBe("unquote");
         expect(x.content).toEqual(["x"]);
     });
+
+    test("CDATA section", () => {
+        const { root } = parse("{ p {: { dodo } ::: hello :} }");
+        expect(root.content).toEqual([" { dodo } ::: hello "]);
+    });
+
+    test("CDATA section (with space)", () => {
+        const { root } = parse("{ p CDATA\\: {: { dodo } ::: hello :} }");
+        expect(root.content).toEqual(["CDATA:", "  { dodo } ::: hello "]);
+    });
+
+    test("Attribute value with CDATA", () => {
+        const { root } = parse("{ p: {:{ value }:} }");
+        expect(root.attributes.p).toBe("{ value }");
+    });
 });
