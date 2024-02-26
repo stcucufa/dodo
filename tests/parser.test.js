@@ -153,18 +153,31 @@ this is more content }`);
         expect(x.content).toEqual(["x"]);
     });
 
-    test("CDATA section", () => {
-        const { root } = parse("{ p {: { dodo } ::: hello :} }");
-        expect(root.content).toEqual([" { dodo } ::: hello "]);
+    describe("CDATA section", () => {
+
+        test("In content (first)", () => {
+            const { root } = parse("{ p {: { dodo } ::: hello :} }");
+            expect(root.content).toEqual([" { dodo } ::: hello "]);
+        });
+
+        test("In content (after space)", () => {
+            const { root } = parse("{ p CDATA\\: {: { dodo } ::: hello :} }");
+            expect(root.content).toEqual(["CDATA:", "  { dodo } ::: hello "]);
+        });
+
+        test("Attribute value with CDATA", () => {
+            const { root } = parse("{ p: {:{ value }:} }");
+            expect(root.attributes.p).toBe("{ value }");
+        });
+
+        test("Unterminated", () => {
+            expect(() => parse("{ p: {:{ value } } }")).toThrow();
+        });
+
+        test("Unexpected", () => {
+            expect(() => parse("{ {: no CDATA section for name :} this: does not work }")).toThrow();
+        });
+
     });
 
-    test("CDATA section (with space)", () => {
-        const { root } = parse("{ p CDATA\\: {: { dodo } ::: hello :} }");
-        expect(root.content).toEqual(["CDATA:", "  { dodo } ::: hello "]);
-    });
-
-    test("Attribute value with CDATA", () => {
-        const { root } = parse("{ p: {:{ value }:} }");
-        expect(root.attributes.p).toBe("{ value }");
-    });
 });
