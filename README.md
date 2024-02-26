@@ -22,7 +22,7 @@ A Dodo document looks like this:
     Markdown }, and HTML is too heavy to author by hand. It looks like
     a stripped-down XML and is easy to parse, with the goal to also
     make it easy to extend and transform into other output formats
-    (such as HTML but also { eg }, plain text or { latex }) with an
+    (such as HTML but also { eg } plain text or { latex }) with an
     XSLT-like language (using the Dodo syntax, of course). { strong
     This is only a fun experiment with no claim of being of any use to
     anyone, anywhere, ever.} }
@@ -30,32 +30,36 @@ A Dodo document looks like this:
     { p A Dodo document looks like this: }
 
     { figure
-        { pre
 
-\{ article: "The Dodo 🦤 markup language" lang: en
+        # Dodo also has CDATA (character data) sections, like XML,
+        # delimited by {: and :} where characters all characters are
+        # interpreted as normal data, which is convenient to show Dodo
+        # markup inside Dodo markup.
 
-    \# Comments start with a \# and run to the end of the line. Special
-    \# characters like \#, \{, \} and \: can be escaped with \\ so that they
-    \# are treated like regular content.
+        { pre {:
 
-    \{ p Dodo 🦤 is a lightweight markup language that I created
-    because I can never remember how to make \{ link:
-    https://daringfireball.net/projects/markdown/syntax\\\#link links in
-    Markdown \}, and HTML is too heavy to author by hand. It looks like
+{ article: "The Dodo 🦤 markup language" lang: en
+
+    # Comments start with a # and run to the end of the line. Special
+    # characters like #, {, }, and : can be escaped with \ so that they are
+    # treated like regular content.
+
+    { p Dodo 🦤 is a lightweight markup language that I created
+    because I can never remember how to make { link:
+    https://daringfireball.net/projects/markdown/syntax\#link links in
+    Markdown }, and HTML is too heavy to author by hand. It looks like
     a stripped-down XML and is easy to parse, with the goal to also
     make it easy to extend and transform into other output formats
-    (such as HTML but also \{ eg \}  plain text or \{ latex \}) with an
-    XSLT-like language (using the Dodo syntax, of course). \{ strong
+    (such as HTML but also { eg } plain text or { latex }) with an
+    XSLT-like language (using the Dodo syntax, of course). { strong
     This is only a fun experiment with no claim of being of any use to
-    anyone, anywhere, ever. \} \}
+    anyone, anywhere, ever.} }
 
-    \{ p A Dodo document looks like this: \}
+    { p A Dodo document looks like this: }
 
-    \# (...)
+    # (...)
 
-\}
-
-        }
+        :} }
         { figcaption A sample Dodo document }
     }
 
@@ -78,7 +82,9 @@ name as the element itself, if the name of the element is followed by a colon (l
 The content of the element starts at the first non-whitespace character that is not a name or an attribute
 value, and ends at the last non-whitespace character before the closing brace of the element. Anything
 other than a brace is treated like a regular character within the content of the element, and special
-characters may be escaped by a backslash to be treated like a regular character. Comments may appear
+characters may be escaped by a backslash to be treated like a regular character. Character data (CDATA)
+sections can also be used where content or attribute values appear to prevent any character from being
+interpreted by the parser; these are delimited by `{:` and `:}` and cannot be nested. Comments may appear
 anywhere outside of strings; they start with a pound sign and run to the end of the line.
 
 ## Transforming Dodo documents

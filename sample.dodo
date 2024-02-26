@@ -18,32 +18,36 @@
     { p A Dodo document looks like this: }
 
     { figure
-        { pre
 
-\{ article: "The Dodo 🦤 markup language" lang: en
+        # Dodo also has CDATA (character data) sections, like XML,
+        # delimited by {: and :} where characters all characters are
+        # interpreted as normal data, which is convenient to show Dodo
+        # markup inside Dodo markup.
 
-    \# Comments start with a \# and run to the end of the line. Special
-    \# characters like \#, \{, \} and \: can be escaped with \\ so that they
-    \# are treated like regular content.
+        { pre {:
 
-    \{ p Dodo 🦤 is a lightweight markup language that I created
-    because I can never remember how to make \{ link:
-    https://daringfireball.net/projects/markdown/syntax\\\#link links in
-    Markdown \}, and HTML is too heavy to author by hand. It looks like
+{ article: "The Dodo 🦤 markup language" lang: en
+
+    # Comments start with a # and run to the end of the line. Special
+    # characters like #, {, }, and : can be escaped with \ so that they are
+    # treated like regular content.
+
+    { p Dodo 🦤 is a lightweight markup language that I created
+    because I can never remember how to make { link:
+    https://daringfireball.net/projects/markdown/syntax\#link links in
+    Markdown }, and HTML is too heavy to author by hand. It looks like
     a stripped-down XML and is easy to parse, with the goal to also
     make it easy to extend and transform into other output formats
-    (such as HTML but also \{ eg \}  plain text or \{ latex \}) with an
-    XSLT-like language (using the Dodo syntax, of course). \{ strong
+    (such as HTML but also { eg } plain text or { latex }) with an
+    XSLT-like language (using the Dodo syntax, of course). { strong
     This is only a fun experiment with no claim of being of any use to
-    anyone, anywhere, ever. \} \}
+    anyone, anywhere, ever.} }
 
-    \{ p A Dodo document looks like this: \}
+    { p A Dodo document looks like this: }
 
-    \# (...)
+    # (...)
 
-\}
-
-        }
+        :} }
         { figcaption A sample Dodo document }
     }
 
